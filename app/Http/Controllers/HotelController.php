@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Hotel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+
+use App\Models\Hotel;
+use App\Http\Resources\HotelCollection;
 
 use App\Filters\HotelFilter;
 
@@ -25,7 +27,7 @@ class HotelController extends Controller
             $sortData = $this->filter->sort($request);
             $paginate = $this->filter->paginate($request);
 
-            return new BookingCollection(
+            return new HotelCollection(
                 Hotel::where($queryParams)
                     ->orderBy($sortData[0], $sortData[1])
                     ->paginate($paginate)

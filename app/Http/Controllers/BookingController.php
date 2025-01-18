@@ -6,10 +6,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 use App\Models\Booking;
+use App\Enums\BookingStatus;
+use App\Events\BookingCreated;
 use App\Http\Resources\BookingCollection;
 use App\Http\Resources\BookingResource;
-
 use App\Filters\BookingFilter;
+use App\http\Requests\GetBookingRequest;
+use App\http\Requests\StoreBookingRequest;
+use App\Jobs\ExportBookingsJob;
 
 class BookingController extends Controller
 {
@@ -21,6 +25,7 @@ class BookingController extends Controller
         // add middleware to the controller or other constructor logic
     }
 
+    
     public function index(Request $request)
     {
         try{
@@ -43,25 +48,75 @@ class BookingController extends Controller
             );
         }
     }
-
-    public function store(Request $request)
+    
+    public function indexScopes(GetBookingRequest $request)
     {
-        $validatedData = $request->validate([
-            'tour_id' => 'required|exists:tours,id',
-            'hotel_id' => 'required|exists:hotels,id',
-            'customer_name' => 'required|string|max:255',
-            'customer_email' => 'required|email|max:255',
-            'number_of_people' => 'required|integer|min:1',
-            'booking_date' => 'required|date',
-        ]);
+        try{
+            $query = Booking::query();
 
-        $booking = Booking::create($validatedData);
-        return response()->json($booking, 201);
+            if ($request->has('tour_name')) {
+                $query->byTourName($request->input('tour_name'));
+            }
+
+            if ($request->has('hotel_name')) {
+                $query->byHotelName($request->input('hotel_name'));
+            }
+
+            if ($request->has('customer_name')) {
+                $query->byCustomerName($request->input('customer_name'));
+            }
+
+            if ($request->has('start_date') && $request->has('end_date')) {
+                $query->whereBetween('booking_date', [
+                    $request->input('start_date'),
+                    $request->input('end_date')
+                ]);
+            }
+            
+            $bookings = $query
+                        ->orderBy(
+                            $request->input('field_order', 'booking_date'),
+                            $request->input('direction_order', 'asc')
+                        )
+                        ->paginate($request->input('per_page', 10));
+
+            return new BookingCollection($bookings);
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            return response()->json(
+                ['error' => 'Internal Server Error. Please try again later.'],
+                500
+            );
+        }
+    }
+
+    public function store(StoreBookingRequest $request)
+    {   
+        try{
+            $booking = Booking::create($request->validated());
+            event(new BookingCreated($booking));
+            return new BookingResource($booking, 201);
+        }catch (\Exception $e) {
+            Log::error($e->getMessage());
+            return response()->json(
+                ['error' => 'Error creating booking. Please try again later.'],
+                500
+            );
+        }
+        
     }
 
     public function show(Booking $booking)
     {
-        return response()->json($booking, 200);
+        try{
+            return new BookingResource($booking);
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            return response()->json(
+                ['error' => 'Internal Server Error. Please try again later.'],
+                500
+            );
+        }
     }
 
     public function update(Request $request, Booking $booking)
@@ -79,6 +134,26 @@ class BookingController extends Controller
         return response()->json($booking, 200);
     }
 
+    /**
+     * Cancel a booking.
+     * 
+     * @param \App\Models\Booking $booking
+     * @return \Illuminate\Http\Response
+     */
+    public function cancel(Booking $booking)
+    {
+        try{
+            $booking->update(['status' => BookingStatus::Canceled]);
+            return response()->json($booking, 200);
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            return response()->json(
+                ['error' => 'Internal Server Error. Please try again later.'],
+                500
+            );
+        }
+    }
+
     public function destroy(Booking $booking)
     {
         $booking->delete();
@@ -92,8 +167,7 @@ class BookingController extends Controller
      */
     public function export()
     {
-        // export bookings to a file
+        ExportBookingsJob::dispatch();
+        return response()->json(['message' => 'Export job dispatched.'], 200);
     }
-
-
 }

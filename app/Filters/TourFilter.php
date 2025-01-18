@@ -4,7 +4,7 @@ namespace App\Filters;
 
 use App\Filters\ApiFilter;
 
-class BookingFilter extends ApiFilter
+class TourFilter extends ApiFilter
 {  
     /**
      * The safe parameters.
