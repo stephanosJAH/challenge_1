@@ -2,31 +2,46 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Booking;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+
+use App\Models\Booking;
+use App\Http\Resources\BookingCollection;
+use App\Http\Resources\BookingResource;
+
+use App\Filters\BookingFilter;
 
 class BookingController extends Controller
 {
+
+    public function __construct(
+        protected BookingFilter $filter
+    )
+    {
+        // add middleware to the controller or other constructor logic
+    }
+
     public function index(Request $request)
     {
-        $query = Booking::query();
+        try{
+            $queryParams = $this->filter->queryParams($request);
+            $sortData = $this->filter->sort($request);
+            $paginate = $this->filter->paginate($request);
 
-        if ($request->has('start_date')) {
-            $query->where('booking_date', '>=', $request->start_date);
+            return new BookingCollection(
+                Booking::where($queryParams)
+                    ->orderBy($sortData[0], $sortData[1])
+                    ->paginate($paginate)
+                    ->appends($request->query()),
+                200
+            );
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            return response()->json(
+                ['error' => 'Internal Server Error. Please try again later.'],
+                500
+            );
         }
-
-        if ($request->has('end_date')) {
-            $query->where('booking_date', '<=', $request->end_date);
-        }
-
-        $bookings = $query->get();
-
-        foreach ($bookings as $booking) {
-            $booking->tour;
-            $booking->hotel;
-        }
-
-        return response()->json($bookings, 200);
     }
 
     public function store(Request $request)
@@ -69,4 +84,16 @@ class BookingController extends Controller
         $booking->delete();
         return response()->json(null, 204);
     }
+
+    /**
+     * Export bookings to a CSV file.
+     * 
+     * @return \Illuminate\Http\Response
+     */
+    public function export()
+    {
+        // export bookings to a file
+    }
+
+
 }

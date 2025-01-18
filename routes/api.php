@@ -8,3 +8,5 @@ use App\Http\Controllers\BookingController;
 Route::apiResource('tours', TourController::class);
 Route::apiResource('hotels', HotelController::class);
 Route::apiResource('bookings', BookingController::class);
+
+Route::get('/api/bookings/export', [BookingController::class, 'export']);
