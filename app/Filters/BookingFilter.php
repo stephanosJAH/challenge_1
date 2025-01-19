@@ -16,8 +16,9 @@ class BookingFilter extends ApiFilter
         'hotel_id' => ['eq'],
         'customer_name' => ['like'],
         'customer_email' => ['like'],
-        'number_of_people' => ['eq'],
+        'number_of_people' => ['eq', 'gt', 'lt', 'tle', 'gte'],
         'booking_date' => ['eq', 'gt', 'lt', 'tle', 'gte'],
+        'status' => ['eq'],
     ];
 
     /**
@@ -32,6 +33,7 @@ class BookingFilter extends ApiFilter
         'customer_email' => 'customer_email',
         'number_of_people' => 'number_of_people',
         'booking_date' => 'booking_date',
+        'status' => 'status',
     ];
 
     /**

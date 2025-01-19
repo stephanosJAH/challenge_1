@@ -28,3 +28,14 @@ We hope this project allows you to demonstrate your technical skills and your ab
 6. **Use of FormRequests:** Utilize FormRequests for data validation.
 7. **Use of Traits:** Utilize Traits for code reuse where necessary.
 8. **Use of Enums:** Utilize Enums to improve code readability where possible.
+
+__________________________________________________________________________________________________
+
+# Guie for instalation
+
+## QUEUE
+   - php artisan queue:table
+   - php artisan queue:work
+
+
+

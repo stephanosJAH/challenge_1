@@ -2,32 +2,45 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Tour;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+
+use App\Models\Tour;
+use App\Http\Resources\TourCollection;
+
+use App\Filters\TourFilter;
 
 class TourController extends Controller
 {
+
+    public function __construct(
+        protected TourFilter $filter
+    )
+    {
+        // add middleware to the controller or other constructor logic
+    }
+
     public function index(Request $request)
     {
-        $query = Tour::query();
+        try{
+            $queryParams = $this->filter->queryParams($request);
+            $sortData = $this->filter->sort($request);
+            $paginate = $this->filter->paginate($request);
 
-        if ($request->has('min_price')) {
-            $query->where('price', '>=', $request->min_price);
+            return new TourCollection(
+                Tour::where($queryParams)
+                    ->orderBy($sortData[0], $sortData[1])
+                    ->paginate($paginate)
+                    ->appends($request->query()),
+                200
+            );
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            return response()->json(
+                ['error' => 'Internal Server Error. Please try again later.'],
+                500
+            );
         }
-
-        if ($request->has('max_price')) {
-            $query->where('price', '<=', $request->max_price);
-        }
-
-        if ($request->has('start_date')) {
-            $query->where('start_date', '>=', $request->start_date);
-        }
-
-        if ($request->has('end_date')) {
-            $query->where('end_date', '<=', $request->end_date);
-        }
-
-        return response()->json($query->get(), 200);
     }
 
     public function store(Request $request)
