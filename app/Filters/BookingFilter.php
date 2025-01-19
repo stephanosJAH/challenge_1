@@ -14,7 +14,7 @@ class BookingFilter extends ApiFilter
     protected $safeParameters = [
         'tour_id' => ['eq'],
         'hotel_id' => ['eq'],
-        'customer_name' => ['like'],
+        'customer_name' => ['like', 'eq'],
         'customer_email' => ['like'],
         'number_of_people' => ['eq', 'gt', 'lt', 'tle', 'gte'],
         'booking_date' => ['eq', 'gt', 'lt', 'tle', 'gte'],

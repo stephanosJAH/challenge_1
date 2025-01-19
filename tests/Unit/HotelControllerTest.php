@@ -102,3 +102,72 @@ it('returns 404 when deleting a non-existent hotel', function () {
     $response = $this->deleteJson('/api/hotels/999');
     $response->assertStatus(Response::HTTP_NOT_FOUND);
 });
+
+
+/**
+ * Test the indexFilter method.
+ */
+it('can retrieve hotels filtered without scope, filter [eq] name', function () {
+    $hotel1 = Hotel::factory()->create(['name' => 'Hotel Royal 1']);
+    $hotel2 = Hotel::factory()->create(['name' => 'Hotel test']);
+
+    $response = $this->getJson('/api/hotels?name[eq]=Hotel Royal 1');
+
+    $response->assertStatus(Response::HTTP_OK)
+        ->assertJsonFragment(['id' => $hotel1->id])
+        ->assertJsonMissing(['id' => $hotel2->id]);
+});
+
+it('can retrieve hotels filtered without scope, filter [like] description', function () {
+    $hotel1 = Hotel::factory()->create(['description' => 'This is a hotel description, find me']);
+    $hotel2 = Hotel::factory()->create(['description' => 'This is a hotel description']);
+
+    $response = $this->getJson('/api/hotels?description[like]=find me');
+
+    $response->assertStatus(Response::HTTP_OK)
+        ->assertJsonFragment(['id' => $hotel1->id])
+        ->assertJsonMissing(['id' => $hotel2->id]);
+});
+
+it('can retrieve hotels filtered without scope, filter [eq] rating', function () {
+    $hotel1 = Hotel::factory()->create(['rating' => 2]);
+    $hotel2 = Hotel::factory()->create(['rating' => 4]);
+    $hotel3 = Hotel::factory()->create(['rating' => 5]);
+
+    $response = $this->getJson('/api/hotels?rating[eq]=4');
+
+    $response->assertStatus(Response::HTTP_OK)
+        ->assertJsonFragment(['id' => $hotel1->id])
+        ->assertJsonMissing(['id' => $hotel2->id])
+        ->assertJsonMissing(['id' => $hotel3->id]);
+});
+
+it('can retrieve hotels filtered without scope, filter [gte] rating', function () {
+    $hotel0 = Hotel::factory()->create(['rating' => 1]);
+    $hotel1 = Hotel::factory()->create(['rating' => 2]);
+    $hotel2 = Hotel::factory()->create(['rating' => 4]);
+    $hotel3 = Hotel::factory()->create(['rating' => 5]);
+
+    $response = $this->getJson('/api/hotels?rating[gte]=3');
+
+    $response->assertStatus(Response::HTTP_OK)
+        ->assertJsonFragment(['id' => $hotel2->id])
+        ->assertJsonFragment(['id' => $hotel3->id])
+        ->assertJsonMissing(['id' => $hotel0->id])
+        ->assertJsonMissing(['id' => $hotel1->id]);
+});
+
+it('can retrieve hotels filtered without scope, filter [tle] price_per_night', function () {
+    $hotel1 = Hotel::factory()->create(['price_per_night' => 500]);
+    $hotel2 = Hotel::factory()->create(['price_per_night' => 800]);
+    $hotel3 = Hotel::factory()->create(['price_per_night' => 1000]);
+    $hotel4 = Hotel::factory()->create(['price_per_night' => 1500]);
+
+    $response = $this->getJson('/api/hotels?price_per_night[tle]=1000');
+
+    $response->assertStatus(Response::HTTP_OK)
+        ->assertJsonFragment(['id' => $hotel1->id])
+        ->assertJsonFragment(['id' => $hotel2->id])
+        ->assertJsonFragment(['id' => $hotel3->id])
+        ->assertJsonMissing(['id' => $hotel4->id]);
+});

@@ -99,3 +99,58 @@ it('returns 404 when deleting a non-existent tour', function () {
     $response = $this->deleteJson('/api/tours/999');
     $response->assertStatus(Response::HTTP_NOT_FOUND);
 });
+
+
+/**
+ * Test the indexFilter method.
+ */
+it('can retrieve tours filtered without scope, filter [eq] name', function () {
+    $tour1 = Tour::factory()->create(['name' => 'Tour Zoo 1']);
+    $tour2 = Tour::factory()->create(['name' => 'Tour test']);
+
+    $response = $this->getJson('/api/tours?name=Tour Zoo 1');
+
+    $response->assertStatus(Response::HTTP_OK)
+        ->assertJsonFragment(['id' => $tour1->id])
+        ->assertJsonMissing(['id' => $tour2->id]);
+});
+
+it('can retrieve tours filtered without scope, filter [like] description', function () {
+    $tour1 = Tour::factory()->create(['description' => 'This is a tour description, find Zafari']);
+    $tour2 = Tour::factory()->create(['description' => 'This is a tour description']);
+
+    $response = $this->getJson('/api/tours/description[like]=Zafari');
+
+    $response->assertStatus(Response::HTTP_OK)
+        ->assertJsonFragment(['id' => $tour1->id])
+        ->assertJsonMissing(['id' => $tour2->id]);
+});
+
+it('can retrieve tours filtered without scope, filter [eq] rating', function () {
+    $tour1 = Tour::factory()->create(['rating' => 2]);
+    $tour2 = Tour::factory()->create(['rating' => 4]);
+    $tour3 = Tour::factory()->create(['rating' => 5]);
+
+    $response = $this->getJson('/api/tours/index-filter?rating[eq]=4');
+
+    $response->assertStatus(Response::HTTP_OK)
+        ->assertJsonFragment(['id' => $tour1->id])
+        ->assertJsonMissing(['id' => $tour2->id])
+        ->assertJsonMissing(['id' => $tour3->id]);
+});
+
+it('can retrieve tours filtered without scope, filter [tle] price and [like] Zafari', function () {
+    $tour1 = Tour::factory()->create(['price' => 500, 'description' => 'Tour whit Zoo']);
+    $tour2 = Tour::factory()->create(['price' => 800, 'description' => 'Tour whit Park']);
+    $tour3 = Tour::factory()->create(['price' => 1000, 'description' => 'Tour whit Zafari']);
+    $tour3 = Tour::factory()->create(['price' => 1200, 'description' => 'Tour whit Zafari']);
+    $tour4 = Tour::factory()->create(['price' => 1500, 'description' => 'Tour whit Zafari and Park']);
+
+    $response = $this->getJson('/api/tours/index-filter?price[tle]=1200&description[like]=Zafari');
+
+    $response->assertStatus(Response::HTTP_OK)
+        ->assertJsonFragment(['id' => $tour3->id])
+        ->assertJsonFragment(['id' => $tour4->id])
+        ->assertJsonMissing(['id' => $tour1->id])
+        ->assertJsonMissing(['id' => $tour2->id]);
+});

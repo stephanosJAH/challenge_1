@@ -25,42 +25,7 @@ class BookingController extends Controller
         // add middleware to the controller or other constructor logic
     }
 
-    /**
-     * Index bookings.
-     * 
-     * NOTA: 
-     * Este metodo incluye el uso de otra clase para filtrar los resultados.
-     * Esta forma de filtrar los resultados es mas flexible y permite reutilizarlos
-     * en otros controladores.
-     * Y tambien se puede incluir el uso de scopes para filtrar los resultados.
-     * 
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\Response
-     */
-    public function index(Request $request)
-    {
-        try{
-            $queryParams = $this->filter->queryParams($request);
-            $sortData = $this->filter->sort($request);
-            $paginate = $this->filter->paginate($request);
-
-            return new BookingCollection(
-                Booking::where($queryParams)
-                    ->orderBy($sortData[0], $sortData[1])
-                    ->paginate($paginate)
-                    ->appends($request->query()),
-                200
-            );
-        } catch (\Exception $e) {
-            Log::error($e->getMessage());
-            return response()->json(
-                ['error' => 'Internal Server Error. Please try again later.'],
-                500
-            );
-        }
-    }
-    
-    /**
+     /**
      * Index bookings with scopes.
      * 
      * NOTA: 
@@ -69,7 +34,7 @@ class BookingController extends Controller
      * @param \App\Http\Requests\GetBookingRequest $request
      * @return \Illuminate\Http\Response
      */
-    public function indexScopes(GetBookingRequest $request)
+    public function index(GetBookingRequest $request)
     {
         try{
             $query = Booking::query();
@@ -101,6 +66,41 @@ class BookingController extends Controller
                         ->paginate($request->input('per_page', 10));
 
             return new BookingCollection($bookings);
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            return response()->json(
+                ['error' => 'Internal Server Error. Please try again later.'],
+                500
+            );
+        }
+    }
+
+    /**
+     * Index bookings.
+     * 
+     * NOTA: 
+     * Este metodo incluye el uso de otra clase para filtrar los resultados.
+     * Esta forma de filtrar los resultados es mas flexible y permite reutilizarlos
+     * en otros controladores.
+     * Y tambien se puede incluir el uso de scopes para filtrar los resultados.
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\Response
+     */
+    public function indexFilter(Request $request)
+    {
+        try{
+            $queryParams = $this->filter->queryParams($request);
+            $sortData = $this->filter->sort($request);
+            $paginate = $this->filter->paginate($request);
+
+            return new BookingCollection(
+                Booking::where($queryParams)
+                    ->orderBy($sortData[0], $sortData[1])
+                    ->paginate($paginate)
+                    ->appends($request->query()),
+                200
+            );
         } catch (\Exception $e) {
             Log::error($e->getMessage());
             return response()->json(

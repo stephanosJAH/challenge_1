@@ -49,7 +49,7 @@ class Booking extends Model
     }
 
     /**
-     * Scope for filtering by tour name
+     * Scope for filtering by hotel name
      */
     public function scopeByHotelName($query, $hotelName)
     {
