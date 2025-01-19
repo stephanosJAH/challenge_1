@@ -9,7 +9,7 @@ services:
         extra_hosts:
             - 'host.docker.internal:host-gateway'
         ports:
-            - '${APP_PORT:-80}:80'
+            - '${APP_PORT:-8081}:80'  # Changed from 80 to 8080
             - '${VITE_PORT:-5173}:${VITE_PORT:-5173}'
         environment:
             WWWUSER: '${WWWUSER}'
@@ -22,7 +22,8 @@ services:
         networks:
             - sail
         depends_on:
-            - mysql
+           - mysql
+           
     mysql:
         image: 'mysql/mysql-server:8.0'
         ports:
@@ -47,6 +48,7 @@ services:
                 - '-p${DB_PASSWORD}'
             retries: 3
             timeout: 5s
+
 networks:
     sail:
         driver: bridge

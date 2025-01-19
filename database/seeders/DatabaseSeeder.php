@@ -3,6 +3,10 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Models\Tour;
+use App\Models\Hotel;
+use App\Models\Booking;
+
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -19,5 +23,9 @@ class DatabaseSeeder extends Seeder
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+
+        Tour::factory(10)->create();
+        Hotel::factory(10)->create();
+        Booking::factory(10)->create();
     }
 }
