@@ -25,7 +25,18 @@ class BookingController extends Controller
         // add middleware to the controller or other constructor logic
     }
 
-    
+    /**
+     * Index bookings.
+     * 
+     * NOTA: 
+     * Este metodo incluye el uso de otra clase para filtrar los resultados.
+     * Esta forma de filtrar los resultados es mas flexible y permite reutilizarlos
+     * en otros controladores.
+     * Y tambien se puede incluir el uso de scopes para filtrar los resultados.
+     * 
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\Response
+     */
     public function index(Request $request)
     {
         try{
@@ -49,6 +60,15 @@ class BookingController extends Controller
         }
     }
     
+    /**
+     * Index bookings with scopes.
+     * 
+     * NOTA: 
+     * Este metodo incluye el uso de scopes para filtrar los resultados.
+     * 
+     * @param \App\Http\Requests\GetBookingRequest $request
+     * @return \Illuminate\Http\Response
+     */
     public function indexScopes(GetBookingRequest $request)
     {
         try{
